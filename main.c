@@ -6,7 +6,12 @@ Jonathan McChesney-Fleming
 most of this information is sourced from:
 https://student.cs.uwaterloo.ca/~isg/res/mips/opcodes 
 
-
+Structure for the code
+1) parse the file, store the instructions in memory in memory
+2) have a structure for input parameters of the computer thats running like clock rate and instructions per cycle, the math stuff, along with what structure the pipeline will have
+3) attempt to execute, have notes for any errors or hazards that could occur, (maybe this needs to be in half steps, but 5 full steps looking forward minimum is required i think)
+4) take steps 2 and 3s information along with number of instructions from step 1 to calculate the output and compare the computers we are testing
+5) print it all into an output file and make it pretty?
 */
 //included a bunch idk if they are all needed
 #include <stdio.h>
@@ -15,7 +20,8 @@ https://student.cs.uwaterloo.ca/~isg/res/mips/opcodes
 #include <stdint.h>
 
 #include "decode.h"
-
+#include "CPUParameters.h"
+//limit from parser
 #define Memsize 1024 //memory limit for resources
 #define MAX_INSTRUCTIONS 1024
 #define MAX_LINE_LEN 256
@@ -73,7 +79,12 @@ int main(int argc, char **argv)
     char      mnemonic[32];              /* instruction name token             */
     char      operands[MAX_LINE_LEN];    /* everything after the mnemonic      */
     uint32_t  word;                      //encoded 32-bit instruction word
+    
+    Simulator sim;
 
+
+//Parsing section
+//1) parse the file, store the instructions in memory in memory
 //check for source file, in the same file path
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <TestFile.txt>\n", argv[0]); //replace with your test file name
@@ -131,6 +142,15 @@ int main(int argc, char **argv)
 	fclose(fp);
     printf("\n%d instruction(s) assembled into memory.\n", count);
     
+    //Simulator section to test the following
+    //2) have a structure for input parameters of the computer thats running like clock rate and instructions per cycle, the math stuff, along with what structure the pipeline will have
+
+
+    init_simulator(&sim);
+
+    print_cpu_params(&sim.params);
+    print_pipeline_state(&sim.pipe);
+    print_metrics(&sim.metrics);
 //run through the instructions with given input
 //each instruction needs to look 5 ahead i think since there are 5 steps for each
 
