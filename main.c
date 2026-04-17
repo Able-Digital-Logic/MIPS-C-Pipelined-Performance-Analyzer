@@ -13,7 +13,7 @@ https://student.cs.uwaterloo.ca/~isg/res/mips/opcodes
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-
+#include "CPUParameters.h"
 #include "decode.h"
 
 #define Memsize 1024 //memory limit for resources
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     }
     count = 0; //set count to 0
 
-
+Simulator cpu1, cpu2;
 
 //read the input file, translate it into instruction sets
 	while (fgets(line, sizeof(line), fp) != NULL && count < MAX_INSTRUCTIONS) {		//read the file
@@ -130,7 +130,32 @@ int main(int argc, char **argv)
 	//close the file
 	fclose(fp);
     printf("\n%d instruction(s) assembled into memory.\n", count);
+
+   //Simulator section to test the following
+    //2) have a structure for input parameters of the computer thats running like clock rate and instructions per cycle, the math stuff, along with what structure the pipeline will have
+  init_simulator(&cpu1);
+    init_simulator(&cpu2);
+
+    cpu1.params.pipeline_depth = 1;
+    cpu2.params.pipeline_depth = 5;
+    cpu2.params.enable_forwarding = 1;
     
+    Program program;
+    program.instr_count = count;
+    for (int i = 0; i < count && i < MAX_INSTR; i++) {
+        program.instr_words[i] = memory[i];
+    }
+
+        cpu1.metrics.instruction_count = count;
+        cpu2.metrics.instruction_count = count;
+    print_cpu_params(&cpu1.params);
+    print_pipeline_state(&cpu1.pipe);
+    print_metrics(&cpu1.metrics);
+
+    print_cpu_params(&cpu2.params);
+ 
+
+	
 //run through the instructions with given input
 //each instruction needs to look 5 ahead i think since there are 5 steps for each
 
