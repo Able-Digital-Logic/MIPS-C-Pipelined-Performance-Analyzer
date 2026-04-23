@@ -567,49 +567,203 @@ void write_professor_style_report(FILE *out,
                                   const Program *prog,
                                   const Simulator *single_sim,
                                   const Simulator *pipe_sim) {
-    const InstructionStats *s = &single_sim->stats;
+    int i;
 
-    (void)prog;
+    /* ==================== Instruction counting ====================
+       Count instruction types directly from the program so the report
+       reflects the actual static instruction mix.
+    */
+    int lw_count = 0;
+    int sw_count = 0;
+    int rtype_count = 0;
+    int beq_count = 0;
+    int addi_count = 0;
+    int j_count = 0;
+    int other_count = 0;
+    int total_instr = 0;
 
-    fprintf(out, "Processed 1 file(s): ['%s']\n\n", input_name);
+    /* ==================== Metric storage ====================
+       Store extracted metrics for readability and reuse.
+    */
+    double single_cpi;
+    double single_total_ps;
+    double single_latency_ps;
+    double single_tp;
+    double single_clock_ps;
+    int single_total_cycles;
 
+    double pipe_cpi;
+    double pipe_total_ps;
+    double pipe_latency_ps;
+    double pipe_tp;
+    double pipe_clock_ps;
+    int pipe_total_cycles;
+
+    /* ==================== Comparison metrics ====================
+       Ratios used to compare pipeline vs non-pipeline performance.
+    */
+    double exec_speedup = 0.0;
+    double throughput_gain = 0.0;
+    double latency_ratio = 0.0;
+    double cpi_ratio = 0.0;
+
+    /* ==================== Count instructions ==================== */
+    if (prog != NULL) {
+        total_instr = prog->instr_count;
+
+        for (i = 0; i < prog->instr_count; i++) {
+            switch (prog->instr_mem[i].op) {
+                case OP_LW:   lw_count++; break;
+                case OP_SW:   sw_count++; break;
+                case OP_BEQ:  beq_count++; break;
+                case OP_ADDI: addi_count++; break;
+                case OP_J:    j_count++; break;
+
+                /* All ALU-type operations grouped as R-type */
+                case OP_ADD:
+                case OP_SUB:
+                case OP_AND:
+                case OP_OR:
+                    rtype_count++;
+                    break;
+
+                default:
+                    other_count++;
+                    break;
+            }
+        }
+    } else {
+        /* Fallback if program pointer is unavailable */
+        lw_count = single_sim->stats.lw_count;
+        sw_count = single_sim->stats.sw_count;
+        rtype_count = single_sim->stats.rtype_count;
+        beq_count = single_sim->stats.beq_count;
+        total_instr = single_sim->stats.total_count;
+    }
+
+    /* ==================== Extract metrics ==================== */
+    single_cpi        = single_sim->metrics.cpi;
+    single_total_ps   = single_sim->metrics.total_execution_time_ps;
+    single_latency_ps = single_sim->metrics.average_instruction_latency_ps;
+    single_tp         = single_sim->metrics.throughput_ips;
+    single_clock_ps   = single_sim->metrics.reference_clock_ps;
+    single_total_cycles = single_sim->metrics.total_cycles;
+
+    pipe_cpi          = pipe_sim->metrics.cpi;
+    pipe_total_ps     = pipe_sim->metrics.total_execution_time_ps;
+    pipe_latency_ps   = pipe_sim->metrics.average_instruction_latency_ps;
+    pipe_tp           = pipe_sim->metrics.throughput_ips;
+    pipe_clock_ps     = pipe_sim->metrics.effective_clock_ps;
+    pipe_total_cycles = pipe_sim->metrics.total_cycles;
+
+    /* ==================== Compute comparison ratios ==================== */
+    if (pipe_total_ps > 0.0)
+        exec_speedup = single_total_ps / pipe_total_ps;
+
+    if (single_tp > 0.0)
+        throughput_gain = pipe_tp / single_tp;
+
+    if (pipe_latency_ps > 0.0)
+        latency_ratio = single_latency_ps / pipe_latency_ps;
+
+    if (pipe_cpi > 0.0)
+        cpi_ratio = single_cpi / pipe_cpi;
+
+    /* ==================== Report Header ==================== */
+    fprintf(out, "============================================================\n");
+    fprintf(out, "           Pipelined Performance Analyzer Report\n");
+    fprintf(out, "============================================================\n");
+    fprintf(out, "Input file: %s\n", input_name);
+    fprintf(out, "Processed files: 1\n\n");
+
+    /* ==================== Instruction Summary ==================== */
     fprintf(out, "Instruction counts:\n");
-fprintf(out, "lw=%d, sw=%d, R-type=%d, beq=%d\n",
-        s->lw_count, s->sw_count, s->rtype_count, s->beq_count);
+    fprintf(out, "lw=%d, sw=%d, R-type=%d, addi=%d, beq=%d, j=%d",
+            lw_count, sw_count, rtype_count, addi_count, beq_count, j_count);
+    if (other_count > 0)
+        fprintf(out, ", other=%d", other_count);
+    fprintf(out, "\n\n");
 
-   
+    fprintf(out, "Total instructions: %d\n\n", total_instr);
 
-    fprintf(out, "\n");
-    fprintf(out, "Total instructions: %d\n\n", s->total_count);
-
+    /* ==================== Non-pipeline section ==================== */
     fprintf(out, "=== Non-pipeline mode ===\n");
-    fprintf(out, "Per-instruction execution time (ps):\n");
+    fprintf(out, "Clock / cycle time: %.0f ps\n", single_clock_ps);
+    fprintf(out, "Total cycles: %d\n", single_total_cycles);
+    fprintf(out, "Average CPI: %.3f\n", single_cpi);
+    fprintf(out, "Total execution time: %.0f ps\n", single_total_ps);
+    fprintf(out, "Average instruction latency: %.3f ps\n", single_latency_ps);
+    fprintf(out, "Average throughput: %.3f instr/s\n", single_tp);
+
+    fprintf(out, "\nInstruction timing details (ps):\n");
     fprintf(out, "  lw: %.0f\n", single_sim->params.lw_ps);
     fprintf(out, "  sw: %.0f\n", single_sim->params.sw_ps);
     fprintf(out, "  R-type: %.0f\n", single_sim->params.rtype_ps);
+    fprintf(out, "  addi: %.0f\n", single_sim->params.rtype_ps); /* treated as ALU */
     fprintf(out, "  beq: %.0f\n", single_sim->params.beq_ps);
-   
+    fprintf(out, "  j: %.0f\n\n", single_sim->params.j_ps);
 
-    fprintf(out, "Average CPI: %.3f\n", single_sim->metrics.cpi);
-    fprintf(out, "Total execution time: %.0f ps\n", single_sim->metrics.total_execution_time_ps);
-    fprintf(out, "Average instruction latency: %.3f ps\n", single_sim->metrics.average_instruction_latency_ps);
-    fprintf(out, "Average throughput: %.3f instr/s\n\n", single_sim->metrics.throughput_ips);
-
+    /* ==================== Pipeline section ==================== */
     fprintf(out, "=== Pipeline mode ===\n");
-    fprintf(out, "Single-cycle reference clock: %.0f ps\n",
-            pipe_sim->metrics.reference_clock_ps);
-    fprintf(out, "\tPipelined clock: %.0f ps\n\n",
-            pipe_sim->metrics.effective_clock_ps);
+    fprintf(out, "Clock / cycle time: %.0f ps\n", pipe_clock_ps);
+    fprintf(out, "Total cycles: %d\n", pipe_total_cycles);
+    fprintf(out, "Average CPI: %.3f\n", pipe_cpi);
+    fprintf(out, "Total execution time: %.0f ps\n", pipe_total_ps);
+    fprintf(out, "Average instruction latency: %.3f ps\n", pipe_latency_ps);
+    fprintf(out, "Average throughput: %.3f instr/s\n", pipe_tp);
 
-    fprintf(out, "\tTotal cycles: %d\n", pipe_sim->metrics.total_cycles);
-    fprintf(out, "\tStall cycles: %d\n", pipe_sim->metrics.stall_cycles);
-    fprintf(out, "\tFlush cycles: %d\n", pipe_sim->metrics.flush_cycles);
-    fprintf(out, "\tData hazards: %d\n", pipe_sim->metrics.data_hazards);
-    fprintf(out, "\tControl hazards: %d\n", pipe_sim->metrics.control_hazards);
-    fprintf(out, "\tAverage CPI: %.3f\n", pipe_sim->metrics.cpi);
-    fprintf(out, "\tTotal execution time: %.0f ps\n", pipe_sim->metrics.total_execution_time_ps);
-    fprintf(out, "\tAverage instruction latency: %.3f ps\n", pipe_sim->metrics.average_instruction_latency_ps);
-    fprintf(out, "\tAverage throughput: %.3f instr/s\n", pipe_sim->metrics.throughput_ips);
-    fprintf(out, "\n");
+    fprintf(out, "\nPipeline overhead details:\n");
+    fprintf(out, "  Reference clock: %.0f ps\n", pipe_sim->metrics.reference_clock_ps);
+    fprintf(out, "  Stall cycles: %d\n", pipe_sim->metrics.stall_cycles);
+    fprintf(out, "  Flush cycles: %d\n", pipe_sim->metrics.flush_cycles);
+    fprintf(out, "  Data hazards: %d\n", pipe_sim->metrics.data_hazards);
+    fprintf(out, "  Control hazards: %d\n\n", pipe_sim->metrics.control_hazards);
+
+    /* ==================== Comparison section ==================== */
+    fprintf(out, "=== Comparison ===\n");
+    fprintf(out, "Execution-time speedup (single/pipeline): %.3fx\n", exec_speedup);
+    fprintf(out, "Throughput improvement (pipeline/single): %.3fx\n", throughput_gain);
+    fprintf(out, "Latency ratio (single/pipeline): %.3fx\n", latency_ratio);
+    fprintf(out, "CPI ratio (single/pipeline): %.3fx\n", cpi_ratio);
+
+    /* Human-readable comparisons */
+    fprintf(out, "%s in total execution time\n",
+            (pipe_total_ps < single_total_ps) ? "Faster: Pipeline" :
+            (pipe_total_ps > single_total_ps) ? "Faster: Non-pipeline" : "Tie");
+
+    fprintf(out, "%s throughput\n",
+            (pipe_tp > single_tp) ? "Higher: Pipeline" :
+            (pipe_tp < single_tp) ? "Higher: Non-pipeline" : "Tie");
+
+    fprintf(out, "%s average instruction latency\n\n",
+            (pipe_latency_ps < single_latency_ps) ? "Lower: Pipeline" :
+            (pipe_latency_ps > single_latency_ps) ? "Lower: Non-pipeline" : "Tie");
+
+    /* ==================== Analysis section ==================== */
+    fprintf(out, "=== Analysis ===\n");
+
+    fprintf(out,
+        (pipe_sim->metrics.data_hazards > 0)
+        ? "- Data hazards introduced %d stall cycle(s), reducing pipeline efficiency.\n"
+        : "- No data hazards were observed in this benchmark.\n",
+        pipe_sim->metrics.stall_cycles);
+
+    fprintf(out,
+        (pipe_sim->metrics.control_hazards > 0)
+        ? "- Control hazards introduced %d flush cycle(s), typical for branch-heavy code.\n"
+        : "- No control hazards were observed in this benchmark.\n",
+        pipe_sim->metrics.flush_cycles);
+
+    fprintf(out,
+        (pipe_tp > single_tp)
+        ? "- Pipeline improves throughput via overlapping execution.\n"
+        : "- Pipeline did not improve throughput for this workload.\n");
+
+    fprintf(out,
+        (pipe_total_ps > single_total_ps)
+        ? "- Hazard penalties outweighed pipeline benefits, increasing total runtime.\n"
+        : "- Pipeline reduced overall runtime for this workload.\n");
+
+    fprintf(out, "\n============================================================\n");
 }
 //done
