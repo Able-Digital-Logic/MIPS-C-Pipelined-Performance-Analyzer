@@ -16,6 +16,9 @@ The simulator generates performance reports including:
 - Speedup analysis (pipelined vs. single-cycle)
 - Detailed cycle-by-cycle trace files
 
+This project largely references the website:
+	https://student.cs.uwaterloo.ca/~isg/res/mips/opcodes
+	This website has listed all of the instructions, some of which are commented out for simplicity of the file, and the input files given by the professor.
 ## Project Structure
 
 ### Source Files
@@ -371,7 +374,9 @@ cat test.asm_cycle_trace.txt
 This code is provided for educational purposes.
 
 ## Authors
-
-Jonathan McChesney-Fleming jgmcches@Cougarnet.uh.edu
-
-
+Computer Architecture Group 9
+- Jonathan McChesney-Fleming, jgmcches@Cougarnet.uh.edu
+- Martin Zachariah, mbzachar@cougarnet.uh.edu
+- Hieu Nguyen, hxnguy21@cougarnet.uh.edu
+- Remi Lokhandwala, ralokha2@cougarnet.uh.edu
+- Tien Hoang, thoang28@cougarnet.edu.uh
