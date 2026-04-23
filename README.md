@@ -103,34 +103,6 @@ gcc -o simulator main.c simulate.c decode.c CPUParameters.c -Wall -g
 - `-O2` - Optimization level 2 (recommended for performance)
 - `-g` - Include debug symbols (for use with gdb)
 
-### Makefile (Optional)
-
-You can create a `Makefile` for easier compilation:
-
-```makefile
-CC = gcc
-CFLAGS = -Wall -O2
-TARGET = simulator
-SOURCES = main.c simulate.c decode.c CPUParameters.c
-OBJECTS = $(SOURCES:.c=.o)
-
-$(TARGET): $(OBJECTS)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS)
-
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-clean:
-	rm -f $(OBJECTS) $(TARGET)
-
-.PHONY: clean
-```
-
-Then compile with:
-```bash
-make
-```
-
 ## Usage
 
 ### Running a Single File
