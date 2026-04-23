@@ -271,6 +271,7 @@ params->rtype_ps = 600.0;               // R-type latency (ps)
 params->beq_ps = 500.0;                 // Branch latency (ps)
 params->j_ps = 500.0;                   // Jump latency (ps)
 ```
+These values were given by the professor in the given output file
 
 ## Troubleshooting
 
