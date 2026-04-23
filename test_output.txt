@@ -1,0 +1,32 @@
+Processed 1 file(s): ['TestFile.txt']
+
+Instruction counts:
+lw=1, sw=0, R-type=9, beq=0
+
+Total instructions: 10
+
+=== Non-pipeline mode ===
+Per-instruction execution time (ps):
+  lw: 800
+  sw: 700
+  R-type: 600
+  beq: 500
+Average CPI: 1.000
+Total execution time: 6200 ps
+Average instruction latency: 620.000 ps
+Average throughput: 1612903225.806 instr/s
+
+=== Pipeline mode ===
+Single-cycle reference clock: 800 ps
+	Pipelined clock: 200 ps
+
+	Total cycles: 15
+	Stall cycles: 1
+	Flush cycles: 0
+	Data hazards: 1
+	Control hazards: 0
+	Average CPI: 1.500
+	Total execution time: 3000 ps
+	Average instruction latency: 300.000 ps
+	Average throughput: 3333333333.333 instr/s
+

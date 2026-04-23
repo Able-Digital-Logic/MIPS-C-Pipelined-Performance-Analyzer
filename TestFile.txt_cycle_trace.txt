@@ -1,0 +1,100 @@
+Single-Cycle: Cycle 1 -> addi
+Single-Cycle: Cycle 2 -> addi
+Single-Cycle: Cycle 3 -> add
+Single-Cycle: Cycle 4 -> sub
+Single-Cycle: Cycle 5 -> and
+Single-Cycle: Cycle 6 -> or
+Single-Cycle: Cycle 7 -> lw
+Single-Cycle: Cycle 8 -> add
+Single-Cycle: Cycle 9 -> add
+Single-Cycle: Cycle 10 -> sub
+Pipeline Cycle 1
+  IF/ID  : addi
+  ID/EX  : empty
+  EX/MEM : empty
+  MEM/WB : empty
+
+Pipeline Cycle 2
+  IF/ID  : addi
+  ID/EX  : addi
+  EX/MEM : empty
+  MEM/WB : empty
+
+Pipeline Cycle 3
+  IF/ID  : add
+  ID/EX  : addi
+  EX/MEM : addi
+  MEM/WB : empty
+
+Pipeline Cycle 4
+  IF/ID  : sub
+  ID/EX  : add
+  EX/MEM : addi
+  MEM/WB : addi
+
+Pipeline Cycle 5
+  IF/ID  : and
+  ID/EX  : sub
+  EX/MEM : add
+  MEM/WB : addi
+
+Pipeline Cycle 6
+  IF/ID  : or
+  ID/EX  : and
+  EX/MEM : sub
+  MEM/WB : add
+
+Pipeline Cycle 7
+  IF/ID  : lw
+  ID/EX  : or
+  EX/MEM : and
+  MEM/WB : sub
+
+Pipeline Cycle 8
+  IF/ID  : add
+  ID/EX  : lw
+  EX/MEM : or
+  MEM/WB : and
+
+Pipeline Cycle 9
+  IF/ID  : add
+  ID/EX  : empty
+  EX/MEM : lw
+  MEM/WB : or
+
+Pipeline Cycle 10
+  IF/ID  : add
+  ID/EX  : add
+  EX/MEM : empty
+  MEM/WB : lw
+
+Pipeline Cycle 11
+  IF/ID  : sub
+  ID/EX  : add
+  EX/MEM : add
+  MEM/WB : empty
+
+Pipeline Cycle 12
+  IF/ID  : empty
+  ID/EX  : sub
+  EX/MEM : add
+  MEM/WB : add
+
+Pipeline Cycle 13
+  IF/ID  : empty
+  ID/EX  : empty
+  EX/MEM : sub
+  MEM/WB : add
+
+Pipeline Cycle 14
+  IF/ID  : empty
+  ID/EX  : empty
+  EX/MEM : empty
+  MEM/WB : sub
+
+Pipeline Cycle 15
+  IF/ID  : empty
+  ID/EX  : empty
+  EX/MEM : empty
+  MEM/WB : empty
+
