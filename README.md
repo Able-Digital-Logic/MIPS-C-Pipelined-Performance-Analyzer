@@ -372,4 +372,6 @@ This code is provided for educational purposes.
 
 ## Authors
 
-CPU Architecture Simulation Project
+Jonathan McChesney-Fleming jgmcches@Cougarnet.uh.edu
+
+
