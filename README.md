@@ -128,7 +128,7 @@ gcc -o simulator main.c simulate.c decode.c CPUParameters.c -Wall -g
 Process all predefined test files:
 
 ```bash
-./simulator all
+./simulator --all
 ```
 
 This processes the following files:
