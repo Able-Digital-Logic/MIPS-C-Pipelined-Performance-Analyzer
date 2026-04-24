@@ -1,3 +1,14 @@
+/*
+main file to structure all of the other files around
+ECE 5367 Final Project: Pipelined Performance Analyzer
+Spring 2026
+Jonathan McChesney-Fleming
+most of this information is sourced from:
+https://student.cs.uwaterloo.ca/~isg/res/mips/opcodes
+and the zybooks textbook provided by the computer architecture class provided by University of Houston
+
+edit *test_files[] to include the input files you want to enter
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
